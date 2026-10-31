@@ -182,3 +182,71 @@
     border-right-color: var(--border);
   }
 }
+
+.app-shell {
+  --page-background: #f3f4f6;
+  --surface-background: #ffffff;
+  --primary-text: #111827;
+  --muted-text: #4b5563;
+  --surface-border: #d1d5db;
+  --theme-accent: #4b5563;
+  background-color: var(--page-background);
+  color: var(--primary-text);
+}
+
+.app-shell[data-theme="dark"] {
+  --page-background: #030303;
+  --surface-background: #0a0a0a;
+  --primary-text: #f9fafb;
+  --muted-text: #bdbdbd;
+  --surface-border: #262626;
+  --theme-accent: #333333;
+}
+
+.app-shell[data-theme="gray"] {
+  --page-background: #9ca3af;
+  --surface-background: #d1d5db;
+  --primary-text: #111827;
+  --muted-text: #374151;
+  --surface-border: #6b7280;
+  --theme-accent: #4b5563;
+}
+
+.app-shell[data-theme="crimson"] {
+  --page-background: #831843;
+  --surface-background: #9d174d;
+  --primary-text: #f9fafb;
+  --muted-text: #fbcfe8;
+  --surface-border: #be185d;
+  --theme-accent: #db2777;
+}
+
+.app-shell .app-card,
+.app-shell .bg-white {
+  background-color: var(--surface-background);
+  border-color: var(--surface-border);
+  color: var(--primary-text);
+}
+
+.app-shell .app-muted,
+.app-shell .text-slate-600,
+.app-shell .text-slate-500,
+.app-shell .text-slate-700 {
+  color: var(--muted-text);
+}
+
+.app-shell .text-slate-900 {
+  color: var(--primary-text);
+}
+
+.app-shell input,
+.app-shell textarea,
+.app-shell select {
+  background-color: var(--surface-background);
+  border-color: var(--surface-border);
+  color: var(--primary-text);
+}
+
+.app-shell button:not(:disabled) {
+  background-color: var(--theme-accent);
+}
