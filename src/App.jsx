@@ -2,371 +2,218 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const USERS_URL = "https://jsonplaceholder.typicode.com/users";
-const COMMENTS_URL = "https://jsonplaceholder.typicode.com/comments";
-const THEME_STORAGE_KEY = "react-exercises-theme";
-const TEXT_STORAGE_KEY = "react-exercises-text";
-const COUNTER_STORAGE_KEY = "react-exercises-counter";
-const THEMES = [
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-  { value: "gray", label: "Gray" },
-  { value: "crimson", label: "Crimson" },
+const CARDS = [
+  {
+    title: "makovoe pole",
+    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua..",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3DejSRAo5ztLVtIpbGV7biwahbnYcOy9kKxbXJnVYstxGXmFgOhugc7s&s=10",
+  },
+  {
+    title: "atlanic ocean",
+    description: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCHi99VICv7LZOqZGKhPF_1b0rCcFs6LTzaviKl4qZpQ&s=10",
+  },
+  {
+    title: "Forest",
+    description: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTso_isAkExozdHJb7VDTpOJEmAl-ieKptLyF4lPRqFLg&s=10",
+  },
 ];
+
 const inputClass =
-  "rounded-lg border border-slate-300 px-3 py-2.5 text-base font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100";
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100";
+const buttonClass =
+  "rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200";
 
-function UserItem({ user }) {
-  return (
-    <li className="app-card flex min-w-0 items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-indigo-200 hover:bg-indigo-50/40">
-      <span
-        aria-hidden="true"
-        className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700"
-      >
-        {user.name.trim().charAt(0).toLocaleUpperCase()}
-      </span>
-      <div className="min-w-0">
-        <h3 className="truncate font-semibold text-slate-900">{user.name}</h3>
-        <p className="break-all text-sm text-slate-600">
-          {user.email || "No email"}
-        </p>
-      </div>
-    </li>
-  );
-}
-
-function UserList({ users }) {
-  return users.length ? (
-    <ul className="grid gap-3 sm:grid-cols-2">
-      {users.map((user) => (
-        <UserItem key={user.id} user={user} />
-      ))}
-    </ul>
-  ) : (
-    <p className="rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center text-slate-500">
-      No users.
-    </p>
-  );
-}
-
-function SearchBar({ value, onChange }) {
-  return (
-    <label className="grid gap-1.5 text-sm font-medium text-slate-700">
-      Search
-      <input
-        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base font-normal text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
-        onChange={(event) => onChange(event.target.value)}
-        placeholder="Name…"
-        type="search"
-        value={value}
-      />
-    </label>
-  );
-}
-
-function UserForm({ onAddUser }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    if (!name.trim()) {
-      setError("Enter a name.");
-      return;
-    }
-
-    setError("");
-    setIsSubmitting(true);
-    try {
-      await onAddUser({ name: name.trim(), email });
-      setName("");
-      setEmail("");
-    } catch {
-      setError("Could not add user.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  return (
-    <section className="app-card rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
-      <h2 className="text-xl font-semibold">New user</h2>
-      <form className="mt-4 grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
-        <label className="grid gap-1.5 text-sm font-medium text-slate-700">
-          Name
-          <input
-            autoComplete="name"
-            className={inputClass}
-            onChange={(event) => {
-              setName(event.target.value);
-              setError("");
-            }}
-            placeholder="Name"
-            required
-            value={name}
-          />
-        </label>
-        <label className="grid gap-1.5 text-sm font-medium text-slate-700">
-          Email
-          <input
-            autoComplete="email"
-            className={inputClass}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Email"
-            type="email"
-            value={email}
-          />
-        </label>
-        <div className="sm:col-span-2">
-          {error && (
-            <p className="mb-3 text-sm text-red-600" role="alert">
-              {error}
-            </p>
-          )}
-          <button
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 disabled:cursor-wait disabled:opacity-60 sm:w-auto"
-            disabled={isSubmitting}
-            type="submit"
-          >
-            {isSubmitting ? "Adding…" : "Add"}
-          </button>
-        </div>
-      </form>
-    </section>
-  );
-}
-
-function ThemeSelector({ theme, onThemeChange }) {
-  return (
-    <section className="app-card grid gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-[1fr_auto] sm:items-center">
-      <div>
-        <h2 className="text-xl font-semibold">Theme</h2>
-        <p className="app-muted mt-1 text-sm">Your choice is saved in this browser.</p>
-      </div>
-      <label className="grid gap-1.5 text-sm font-medium text-slate-700">
-        Choose a theme
-        <select
-          className={inputClass}
-          onChange={(event) => onThemeChange(event.target.value)}
-          value={theme}
-        >
-          {THEMES.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </label>
-    </section>
-  );
-}
-
-function TextDraft() {
-  const [text, setText] = useState(
-    () => window.localStorage.getItem(TEXT_STORAGE_KEY) ?? "",
-  );
-
-  useEffect(() => {
-    window.localStorage.setItem(TEXT_STORAGE_KEY, text);
-  }, [text]);
-
-  return (
-    <section className="app-card grid gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div>
-        <h2 className="text-xl font-semibold">Text note</h2>
-        <p className="app-muted mt-1 text-sm">
-          Your text is saved automatically.
-        </p>
-      </div>
-      <label className="grid gap-1.5 text-sm font-medium text-slate-700">
-        Your text
-        <textarea
-          className={`${inputClass} min-h-28 resize-y`}
-          onChange={(event) => setText(event.target.value)}
-          placeholder="Enter text…"
-          value={text}
-        />
-      </label>
-    </section>
-  );
-}
-
-function PersistentCounter() {
-  const [count, setCount] = useState(() => {
-    const savedCount = Number.parseInt(
-      window.localStorage.getItem(COUNTER_STORAGE_KEY) ?? "0",
-      10,
-    );
-    return Number.isNaN(savedCount) ? 0 : savedCount;
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem(COUNTER_STORAGE_KEY, String(count));
-  }, [count]);
-
-  return (
-    <section className="app-card flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div>
-        <h2 className="text-xl font-semibold">Click</h2>
-        <p className="app-muted mt-1 text-sm">
-          Clicks: <strong>{count}</strong>
-        </p>
-      </div>
-      <button
-        className="rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200"
-        onClick={() => setCount((currentCount) => currentCount + 1)}
-        type="button"
-      >
-        Increment
-      </button>
-    </section>
-  );
-}
-
-function CommentsList() {
-  const [comments, setComments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadComments() {
-      try {
-        const { data } = await axios.get(COMMENTS_URL, {
-          signal: controller.signal,
-        });
-        setComments(data);
-      } catch (requestError) {
-        if (!axios.isCancel(requestError)) {
-          setError("Could not load comments.");
-        }
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
-      }
-    }
-
-    loadComments();
-    return () => controller.abort();
-  }, []);
-
-  return (
-    <section className="app-card grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <h2 className="text-xl font-semibold">
-        Comments{" "}
-        {!isLoading && !error && (
-          <span className="app-muted text-sm font-normal">
-            {comments.length}
-          </span>
-        )}
-      </h2>
-      {error ? (
-        <p
-          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-          role="alert"
-        >
-          {error}
-        </p>
-      ) : isLoading ? (
-        <p className="app-muted py-8 text-center" role="status">
-          Loading comments…
-        </p>
-      ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {comments.map((comment) => (
-            <li
-              className="app-card rounded-xl border border-slate-200 p-4"
-              key={comment.id}
-            >
-              <h3 className="break-all font-semibold">{comment.name}</h3>
-              <p className="app-muted mt-2 text-sm">{comment.body}</p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
+  const PRODUCTS = [
+  { id: 1, name: "TV", price: 399.99 },
+  { id: 2, name: "Сolumn", price: 70.0 },
+  { id: 3, name: "Grill", price: 267.99 },
+  { id: 4, name: "Multicooker", price: 89.99 },
+  { id: 5, name: "USB FLASH DRIVE", price: 29.99 },
+];
 
 function App() {
+  const [movies, setMovies] = useState([]);
+  const [movieTitle, setMovieTitle] = useState("");
   const [users, setUsers] = useState([]);
-  const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [theme, setTheme] = useState(() => {
-    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (savedTheme === "blue") return "gray";
-    if (savedTheme === "green" || savedTheme === "dark-gray") return "crimson";
-    return THEMES.some(({ value }) => value === savedTheme)
-      ? savedTheme
-      : "light";
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
+  const [expandedUser, setExpandedUser] = useState(null);
+  const [productSearch, setProductSearch] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
 
-    async function loadUsers() {
-      try {
-        const { data } = await axios.get(USERS_URL, {
-          signal: controller.signal,
-        });
-        setUsers(data);
-      } catch (requestError) {
+    axios
+      .get("https://jsonplaceholder.typicode.com/users", {
+        signal: controller.signal,
+      })
+      .then(({ data }) => setUsers(data))
+      .catch((requestError) => {
         if (!axios.isCancel(requestError)) setError("Could not load users.");
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
-      }
-    }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
 
-    loadUsers();
     return () => controller.abort();
   }, []);
 
-  async function addUser({ name, email }) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setUsers((current) => [
-      ...current,
-      { id: Date.now(), name: name.trim(), email: email.trim() },
-    ]);
-    console.log("User added");
+  function addMovie(event) {
+    event.preventDefault();
+    const title = movieTitle.trim();
+    if (!title) return;
+    setMovies((current) => [...current, title]);
+    setMovieTitle("");
   }
 
-  const filteredUsers = users.filter(({ name }) =>
-    name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
+  const filteredProducts = PRODUCTS.filter(({ name }) =>
+    name.toLowerCase().includes(productSearch.trim().toLowerCase()),
   );
 
   return (
-    <main className="app-shell min-h-screen px-4 py-5 text-slate-900" data-theme={theme}>
-      <div className="mx-auto grid max-w-2xl gap-3">
-        <ThemeSelector theme={theme} onThemeChange={setTheme} />
-        <section className="app-card grid gap-3 rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="text-lg font-semibold">Users</h2>
-          <SearchBar value={search} onChange={setSearch} />
+    <main className="app-shell min-h-screen px-4 py-8 text-slate-900">
+      <div className="mx-auto grid max-w-6xl gap-6">
+
+        <section className="app-card grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-semibold">1.Favorite Movies</h2>
+          <form className="flex flex-col gap-3 sm:flex-row" onSubmit={addMovie}>
+            <label className="sr-only" htmlFor="movie-title">
+              Movie title
+            </label>
+            <input
+              className={inputClass}
+              id="movie-title"
+              onChange={(event) => setMovieTitle(event.target.value)}
+              placeholder="Enter a movie title"
+              value={movieTitle}
+            />
+            <button className={buttonClass} type="submit">
+              Add
+            </button>
+          </form>
+          {movies.length ? (
+            <ul className="grid gap-2">
+              {movies.map((movie, index) => (
+                <li
+                  className="app-card flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3"
+                  key={`${movie}-${index}`}
+                >
+                  <span>{movie}</span>
+                  <button
+                    aria-label={`Delete ${movie}`}
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100"
+                    onClick={() =>
+                      setMovies((current) =>
+                        current.filter((_, movieIndex) => movieIndex !== index),
+                      )
+                    }
+                    type="button"
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="app-muted">Empty.</p>
+          )}
+        </section>
+
+        <section className="app-card grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-semibold">2. Users</h2>
           {error ? (
-            <p
-              className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-              role="alert"
-            >
+            <p className="text-red-600" role="alert">
               {error}
             </p>
-          ) : isLoading ? (
-            <p className="app-muted py-8 text-center" role="status">
+          ) : loading ? (
+            <p className="app-muted" role="status">
               Loading users…
             </p>
           ) : (
-            <UserList users={filteredUsers} />
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {users.map((user) => (
+                <li
+                  className="app-card rounded-xl border border-slate-200 p-4"
+                  key={user.id}
+                >
+                  <h3 className="font-semibold">{user.name}</h3>
+                  <p className="app-muted break-all text-sm">{user.email}</p>
+                  {expandedUser === user.id && (
+                    <p className="app-muted mt-3 text-sm">
+                      {user.address.city} · {user.company.name}
+                    </p>
+                  )}
+                  <button
+                    aria-expanded={expandedUser === user.id}
+                    className={`${buttonClass} mt-4 text-sm`}
+                    onClick={() =>
+                      setExpandedUser(expandedUser === user.id ? null : user.id)
+                    }
+                    type="button"
+                  >
+                    {expandedUser === user.id ? "Show less" : "Show more"}
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
-        <TextDraft />
-        <PersistentCounter />
-        <CommentsList />
-        <UserForm onAddUser={addUser} />
+
+        <section className="app-card grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-semibold">3. Product Search-market</h2>
+          <label className="grid gap-2 font-medium">
+            Search
+            <input
+              className={inputClass}
+              onChange={(event) => setProductSearch(event.target.value)}
+              placeholder="Search products"
+              value={productSearch}
+            />
+          </label>
+          {filteredProducts.length ? (
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredProducts.map((product) => (
+                <li
+                  className="app-card flex justify-between gap-3 rounded-lg border border-slate-200 p-4"
+                  key={product.id}
+                >
+                  <span>{product.name}</span>
+                  <span className="font-semibold">${product.price.toFixed(2)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="app-muted">Empty.</p>
+          )}
+        </section>
+
+        <section className="app-card grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-semibold">4. Image</h2>
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {CARDS.map((card) => (
+              <li
+                className="app-card overflow-hidden rounded-xl border border-slate-200"
+                key={card.title}
+              >
+                <img
+                  alt={card.title}
+                  className="h-48 w-full object-cover"
+                  loading="lazy"
+                  src={card.image}
+                />
+                <div className="p-4">
+                  <h3 className="font-semibold">{card.title}</h3>
+                  <p className="app-muted mt-2 text-sm">{card.description}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </main>
   );
