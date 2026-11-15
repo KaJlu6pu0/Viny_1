@@ -1,243 +1,121 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import "./App.css";
 
-const buttonClass =
-  "rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-50";
+const About = lazy(() => import("./Pages.jsx").then((page) => ({ default: page.About })));
+const Contact = lazy(() => import("./Pages.jsx").then((page) => ({ default: page.Contact })));
+const News = lazy(() => import("./Pages.jsx").then((page) => ({ default: page.News })));
+const Gallery = lazy(() => import("./Pages.jsx").then((page) => ({ default: page.Gallery })));
+const FAQ = lazy(() => import("./Pages.jsx").then((page) => ({ default: page.FAQ })));
+const Profile = lazy(() => import("./Pages.jsx").then((page) => ({ default: page.Profile })));
+const PostDetails = lazy(() => import("./Pages.jsx").then((page) => ({ default: page.PostDetails })));
+const Product = lazy(() => import("./Pages.jsx").then((page) => ({ default: page.Product })));
 
-const messages = [
-  { id: 1, text: "Welcome.", date: "11.11.2026" },
-  { id: 2, text: "Loerm Ipsum.", date: "26.06.2026" },
-  { id: 3, text: "ipsum lorem.", date: "20.03.2023" },
-
-  { id: 4, text: "loerm ipsum lorem.", date: "11.11.2011" },
-  { id: 5, text: "ipsum lorem ipsum!", date: "22.02.2002" },
-];
-
-function Skeleton({ className = "" }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`block h-4 w-full animate-pulse rounded-md bg-slate-300 ${className}`}
-    />
-  );
-}
-
-function LoginGreeting({ isLoggedIn, name }) {
-  return isLoggedIn ? (
-    <p>
-      Welcome, <strong>{name}</strong>!
-    </p>
-  ) : (
-    <div className="flex w-full flex-col items-center gap-2 text-center">
-      <p className="text-lg">
-        Welcome, <strong>{name}</strong>!
-      </p>
-      <button className={`${buttonClass} w-[45%] py-2.5`} type="button">
-        Log in
-      </button>
-    </div>
-  );
-}
-
-function TimedDataDemo() {
-  const [loading, setLoading] = useState(true);
+function useApi(url) {
+  const [result, setResult] = useState({ url: "", data: null, error: "" });
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setLoading(false), 2000);
-    return () => window.clearTimeout(timer);
-  }, []);
+    const controller = new AbortController();
+    fetch(url, { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Помилка завантаження: ${response.status}`);
+        return response.json();
+      })
+      .then((data) => setResult({ url, data, error: "" }))
+      .catch((error) => {
+        if (error.name !== "AbortError") setResult({ url, data: null, error: error.message });
+      });
+    return () => controller.abort();
+  }, [url]);
 
-  return loading ? (
-    <div aria-label="Loading data" className="grid gap-3" role="status">
-      <Skeleton className="h-6 w-[45%]" />
-      <Skeleton />
-      <Skeleton className="w-[65%]" />
-    </div>
-  ) : (
-    <div>
-      <h3 className="font-semibold">Data loaded</h3>
-      <p>Your data is ready.</p>
-    </div>
-  );
+  return result.url === url ? result : { data: null, error: "" };
 }
 
-function DataState({ data }) {
-  return data === null ? (
-    <div aria-label="Loading data" className="grid gap-2" role="status">
-      <Skeleton />
-      <Skeleton className="w-[65%]" />
-    </div>
-  ) : data && typeof data.title === "string" && data.title.trim() ? (
-    <div>
-      <h3 className="font-semibold">{data.title}</h3>
-      <p>{data.description}</p>
-    </div>
-  ) : (
-    <p>No data available.</p>
-  );
-}
-
-function DataStateDemo() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    const timer = window.setTimeout(
-      () => setData({ title: "User profile", description: "Information loaded." }),
-      2000,
-    );
-    return () => window.clearTimeout(timer);
-  }, []);
+function Home() {
+  const { data: users, error } = useApi("https://jsonplaceholder.typicode.com/users");
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <div className="grid content-start gap-2">
-        <h3 className="font-medium">{data === null ? "Loading" : "Loaded"}</h3>
-        <DataState data={data} />
-      </div>
-      <div className="grid content-start gap-2">
-        <h3 className="font-medium">Loaded example</h3>
-        <DataState data={{ title: "User profile", description: "Information loaded." }} />
-      </div>
-      <div className="grid content-start gap-2">
-        <h3 className="font-medium">Empty</h3>
-        <DataState data={{}} />
-      </div>
-    </div>
+    <section>
+      <h1>Головна</h1>
+      <h2>Користувачі</h2>
+      {error && <p role="alert">{error}</p>}
+      {!users && !error && <p role="status">Завантаження користувачів...</p>}
+      <ul>
+        {users?.map((user) => (
+          <li key={user.id}><Link to={`/users/${user.id}`}>{user.name}</Link></li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
-function UserStatus({ userStatus }) {
-  return userStatus === "loading" ? (
-    <div aria-label="Loading user" className="grid gap-2" role="status">
-      <Skeleton />
-      <Skeleton className="w-[65%]" />
-    </div>
-  ) : userStatus === "active" ? (
-    <p>User is active.</p>
-  ) : userStatus === "inactive" ? (
-    <p>User is inactive.</p>
-  ) : (
-    <p>Unknown status.</p>
-  );
-}
+function Posts() {
+  const { data: posts, error } = useApi("https://jsonplaceholder.typicode.com/posts");
+  const [userId, setUserId] = useState("");
 
-function UserStatusDemo() {
-  const [userStatus, setUserStatus] = useState("loading");
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setUserStatus("active"), 2000);
-    return () => window.clearTimeout(timer);
-  }, []);
+  if (error) return <p role="alert">{error}</p>;
+  if (!posts) return <p role="status">Завантаження постів...</p>;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <div className="grid content-start gap-2">
-        <h3 className="font-medium">{userStatus}</h3>
-        <UserStatus userStatus={userStatus} />
-      </div>
-      <div className="grid content-start gap-2">
-        <h3 className="font-medium">active</h3>
-        <UserStatus userStatus="active" />
-      </div>
-      <div className="grid content-start gap-2">
-        <h3 className="font-medium">inactive</h3>
-        <UserStatus userStatus="inactive" />
-      </div>
-    </div>
-  );
-}
-
-function MessagesDemo() {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!loading) return undefined;
-    const timer = window.setTimeout(() => setLoading(false), 3000);
-    return () => window.clearTimeout(timer);
-  }, [loading]);
-
-  return (
-    <div className="grid gap-4">
-      <button
-        className={buttonClass}
-        disabled={loading}
-        onClick={() => setLoading(true)}
-        type="button"
-      >
-        Refresh
-      </button>
-      {loading ? (
-        <ul aria-label="Loading messages" className="grid gap-3" role="status">
-          {Array.from({ length: 5 }, (_, index) => (
-            <li
-              className="grid gap-2 rounded-lg border border-slate-200 p-4"
-              key={index}
-            >
-              <Skeleton />
-              <Skeleton className="w-[65%]" />
-            </li>
+    <section>
+      <h1>Пости</h1>
+      <label>
+        Фільтр за ID користувача{" "}
+        <select value={userId} onChange={(event) => setUserId(event.target.value)}>
+          <option value="">Усі користувачі</option>
+          {[...new Set(posts.map((post) => post.userId))].map((id) => (
+            <option key={id} value={id}>{id}</option>
           ))}
-        </ul>
-      ) : (
-        <ul className="grid gap-3">
-          {messages.map((message) => (
-            <li
-              className="rounded-lg border border-slate-200 p-4"
-              key={message.id}
-            >
-              <p>{message.text}</p>
-              <time className="mt-1 block text-sm text-slate-500">
-                {message.date}
-              </time>
-            </li>
-          ))}
-        </ul>
-      )}
+        </select>
+      </label>
+      <ul>
+        {posts.filter((post) => !userId || post.userId === Number(userId)).map((post) => (
+          <li key={post.id}>
+            <Link to={`/posts/${post.id}`}>{post.title}</Link> — {post.body.slice(0, 20)}...
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function Layout() {
+  return (
+    <div className="app">
+      <header>
+        <Link to="/" className="logo">Мій застосунок</Link>
+        <nav>
+          <Link to="/">Головна</Link>
+          <Link to="/about">Про нас</Link>
+          <Link to="/contacts">Контакти</Link>
+          <Link to="/news">Новини</Link>
+          <Link to="/gallery">Галерея</Link>
+          <Link to="/faq">FAQ</Link>
+          <Link to="/posts">Пости</Link>
+          <Link to="/products/1">Товар</Link>
+        </nav>
+      </header>
+      <main>
+        <Suspense fallback={<p role="status">Завантаження...</p>}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contacts" element={<Contact />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/users/:id" element={<Profile />} />
+            <Route path="/posts" element={<Posts />} />
+            <Route path="/posts/:postId" element={<PostDetails />} />
+            <Route path="/products/:productId" element={<Product />} />
+            <Route path="*" element={<h1>Сторінку не знайдено</h1>} />
+          </Routes>
+        </Suspense>
+      </main>
     </div>
   );
 }
 
-function App() {
-  return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
-      <div className="mx-auto grid max-w-4xl gap-6">
-        <section className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-semibold">1.Login</h2>
-          <div className="flex justify-center">
-            <LoginGreeting isLoggedIn={false} name="User" />
-          </div>
-        </section>
-
-        <section className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-semibold">
-            2.Loading
-          </h2>
-          <TimedDataDemo />
-        </section>
-
-        <section className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-semibold">
-            3.Data states
-          </h2>
-          <DataStateDemo />
-        </section>
-
-        <section className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-semibold">
-            4.User status
-          </h2>
-          <UserStatusDemo />
-        </section>
-
-        <section className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-semibold">
-            5. Messages (3s)
-          </h2>
-          <MessagesDemo />
-        </section>
-      </div>
-    </main>
-  );
+export default function App() {
+  return <BrowserRouter><Layout /></BrowserRouter>;
 }
-
-export default App;
